@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Information</title>
+</head>
+<body>
+    <h1>Group Information Page</h1>
+    <div id="group-info">
+        <p>Group: <span id="group-name">Loading...</span></p>
+        <p>Current Week: <span id="current-week">Loading...</span></p>
+    </div>
+
+    <script>
+        // Parse URL query parameters
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                group: params.get('group'),
+                cw: params.get('cw') === 'true'
+            };
+        }
+
+        // Update page content based on URL parameters
+        function updatePageContent() {
+            const { group, cw } = getQueryParams();
+
+            // Update the DOM elements with the parsed values
+            document.getElementById('group-name').textContent = group || 'Not specified';
+            document.getElementById('current-week').textContent = cw ? 'Yes' : 'No';
+        }
+
+        // Call updatePageContent on page load
+        document.addEventListener('DOMContentLoaded', updatePageContent);
+    </script>
+</body>
+</html>
