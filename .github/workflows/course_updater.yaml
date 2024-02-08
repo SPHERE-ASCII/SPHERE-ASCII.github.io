@@ -1,0 +1,26 @@
+name: Update Course Data
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Runs every Sunday at midnight
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  fetch-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Fetch the course data
+      run: |
+        curl https://edt.univ-nantes.fr/sciences/g350604.xml -o groups/350604.table
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Actions"
+        git add groups/350604.table
+        git commit -m "Update course data" -a || echo "No changes to commit"
+        git push
