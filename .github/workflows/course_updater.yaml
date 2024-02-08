@@ -13,9 +13,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Create the groups directory if it doesn't exist
+      run: mkdir -p groups
+
     - name: Fetch the course data
-      run: |
-        curl https://edt.univ-nantes.fr/sciences/g350604.xml -o groups/350604.table
+      run: curl https://edt.univ-nantes.fr/sciences/g350604.xml -o groups/350604.table
 
     - name: Commit and push changes
       run: |
