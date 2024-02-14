@@ -13,17 +13,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Install jq for JSON parsing
+      run: sudo apt-get install jq
+
     - name: Create the groups directory if it doesn't exist
       run: mkdir -p groups
 
     - name: Fetch the course data
-      run: curl https://edt.univ-nantes.fr/sciences/g350604.xml -o groups/350604.table
+      run: |
+        cat timetable.json | jq -r '.[] | to_entries[] | .key + " " + .value' | while read -r line; do
+          course_code=$(echo $line | awk '{print $1}')
+          url_id=$(echo $line | awk '{print $2}')
+          curl https://edt.univ-nantes.fr/sciences/${url_id}.xml -o groups/${course_code}.table
+        done
 
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Actions"
-        git add groups/350604.table
+        git add groups/*
         git commit -m "Update course data" -a || echo "No changes to commit"
         git remote set-url origin https://timecube-ascii:${{ secrets.MY_PAT }}@github.com/timecube-ascii/timecube-ascii.github.io.git
         git push
