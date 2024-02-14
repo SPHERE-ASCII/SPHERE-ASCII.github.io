@@ -19,19 +19,11 @@ jobs:
     - name: Fetch the course data
       run: curl https://edt.univ-nantes.fr/sciences/g350604.xml -o groups/350604.table
 
-    - name: Commit changes
+    - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Actions"
         git add groups/350604.table
         git commit -m "Update course data" -a || echo "No changes to commit"
-
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: Update course data
-        title: "Update Course Data"
-        body: "This is an automated PR to update course data"
-        branch: "update-course-data-${{ github.run_id }}"
-        delete-branch: true
+        git remote set-url origin https://timecube-ascii:${{ secrets.MY_PAT }}@github.com/timecube-ascii/timecube-ascii.github.io.git
+        git push
