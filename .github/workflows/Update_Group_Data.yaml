@@ -1,0 +1,42 @@
+name: Update Group Data
+
+on:
+  schedule:
+    # Runs every 3 months at midnight on the 1st of the month (adjust to be safe for semesters)
+    - cron: '0 0 1 */3 *'
+  workflow_dispatch: # Allows manual triggering of the workflow if needed
+
+jobs:
+  fetch-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: sudo apt-get install -y jq curl
+
+    - name: Fetch group data from URL and update group_to_group_id.json
+      run: |
+        # Define the URL to fetch group data
+        group_url="https://your-api-url-here.com/groups"
+        
+        # Fetch the group data
+        curl -s "$group_url" -o group_data.json
+
+        # Extract and process the groups, assuming the structure of group_data.json
+        # Adjust jq parsing based on the actual structure of your data
+        jq 'reduce .groups[] as $group ({}; .[$group.name] = $group.id)' group_data.json > group_to_group_id.json
+
+        # Output the updated JSON file
+        cat group_to_group_id.json
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Actions"
+        git add group_to_group_id.json
+        git commit -m "Update group_to_group_id.json with latest group data" -a || echo "No changes to commit"
+        git remote set-url origin https://timecube-ascii:${{ secrets.MY_PAT }}@github.com/timecube-ascii/timecube-ascii.github.io.git
+        git push
