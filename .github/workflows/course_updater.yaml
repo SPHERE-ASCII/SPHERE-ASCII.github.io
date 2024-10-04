@@ -13,18 +13,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install jq for JSON parsing
-      run: sudo apt-get install jq
+    - name: Install dependencies
+      run: sudo apt-get install -y jq curl
 
-    - name: Create the groups directory if it doesn't exist
+    - name: Create groups directory if it doesn't exist
       run: mkdir -p groups
 
-    - name: Fetch the course data
+    - name: Fetch and update course data
       run: |
-        cat timetable.json | jq -r '.[] | to_entries[] | .key + " " + .value' | while read -r line; do
-          course_code=$(echo $line | awk '{print $1}')
-          url_id=$(echo $line | awk '{print $2}')
-          curl https://edt.univ-nantes.fr/sciences/${url_id}.xml -o groups/${course_code}.table
+        jq -r '.[] | to_entries[] | "\(.key) \(.value)"' timetable.json | while read -r course_code url_id; do
+          curl -s "https://edt.univ-nantes.fr/sciences/${url_id}.xml" -o "groups/${course_code}.table"
         done
 
     - name: Commit and push changes
