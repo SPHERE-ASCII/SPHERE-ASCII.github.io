@@ -16,20 +16,28 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get install -y jq curl
 
-    - name: Create groups directory if it doesn't exist
-      run: mkdir -p groups
-
-    - name: Fetch and update course data
+    - name: Create necessary directories
       run: |
+        mkdir -p groups
+        mkdir -p logs
+
+    - name: Fetch and update course data with logging
+      run: |
+        log_file="logs/update_log_$(date +'%Y-%m-%d').log"
         jq -r '.[] | to_entries[] | "\(.key) \(.value)"' timetable.json | while read -r course_code url_id; do
-          curl -s "https://edt.univ-nantes.fr/sciences/${url_id}.xml" -o "groups/${course_code}.table"
+          echo "Processing course: $course_code" | tee -a $log_file
+          if curl -s "https://edt.univ-nantes.fr/sciences/${url_id}.xml" -o "groups/${course_code}.table"; then
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Update successful for $course_code" | tee -a $log_file
+          else
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] Update failed for $course_code" | tee -a $log_file
+          fi
         done
 
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Actions"
-        git add groups/*
-        git commit -m "Update course data" -a || echo "No changes to commit"
+        git add groups/* logs/*
+        git commit -m "Update course data and log results" -a || echo "No changes to commit"
         git remote set-url origin https://timecube-ascii:${{ secrets.MY_PAT }}@github.com/timecube-ascii/timecube-ascii.github.io.git
         git push
